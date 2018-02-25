@@ -2,9 +2,10 @@ package nova.samplebackgroundservice;
 
 import android.app.Service;
 import android.content.Intent;
-import android.media.MediaPlayer;
+import android.os.Binder;
 import android.os.IBinder;
-import android.util.Log;
+
+import java.util.Random;
 
 /**
  * Created by Administrator on 2018-02-21.
@@ -12,37 +13,45 @@ import android.util.Log;
 
 // 서비스 클래스를 구현하려면, Service 를 상속받는다
 public class MyService extends Service {
-    MediaPlayer mp; // 음악 재생을 위한 객체
+    // 외부로 데이터를 전달하려면 바인더 사용
+
+    // Binder 객체는 IBinder 인터페이스 상속구현 객체입니다
+    //public class Binder extends Object implements IBinder
+
+    IBinder mBinder = new MyBinder();
+
+    class MyBinder extends Binder {
+        MyService getService() { // 서비스 객체를 리턴
+            return MyService.this;
+        }
+    }
 
     @Override
     public IBinder onBind(Intent intent) {
-        // Service 객체와 (화면단 Activity 사이에서)
-        // 통신(데이터를 주고받을) 때 사용하는 메서드
-        // 데이터를 전달할 필요가 없으면 return null;
-        return null;
+        // 액티비티에서 bindService() 를 실행하면 호출됨
+        // 리턴한 IBinder 객체는 서비스와 클라이언트 사이의 인터페이스 정의한다
+        return mBinder; // 서비스 객체를 리턴
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        return super.onUnbind(intent);
+    }
+
+    int getRan() { // 임의 랜덤값을 리턴하는 메서드
+        return new Random().nextInt();
     }
     @Override
     public void onCreate() {
         super.onCreate();
-        // 서비스에서 가장 먼저 호출됨(최초에 한번만)
-        Log.d("test", "서비스의 onCreate");
-        mp = MediaPlayer.create(this, R.raw.chacha);
-        mp.setLooping(false); // 반복재생
     }
-    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        // 서비스가 호출될 때마다 실행
-        Log.d("test", "서비스의 onStartCommand");
-        mp.start(); // 노래 시작
         return super.onStartCommand(intent, flags, startId);
     }
-
     @Override
     public void onDestroy() {
         super.onDestroy();
-        // 서비스가 종료될 때 실행
-        mp.stop(); // 음악 종료
-        Log.d("test", "서비스의 onDestroy");
     }
 }
+
 
